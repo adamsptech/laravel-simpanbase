@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources\MachineDowntimes\Tables;
 
+use App\Filament\Exports\MachineDowntimeExporter;
 use App\Models\MachineDowntime;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\ExportAction;
+use Filament\Actions\ExportBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -68,7 +71,12 @@ class MachineDowntimesTable
                 DeleteAction::make(),
             ])
             ->toolbarActions([
+                ExportAction::make()
+                    ->exporter(MachineDowntimeExporter::class)
+                    ->label('Export'),
                 BulkActionGroup::make([
+                    ExportBulkAction::make()
+                        ->exporter(MachineDowntimeExporter::class),
                     DeleteBulkAction::make(),
                 ]),
             ]);

@@ -38,4 +38,26 @@ class PartAddition extends Model
     {
         return $this->belongsTo(User::class, 'added_by');
     }
+
+    /**
+     * Boot the model and register observers
+     */
+    protected static function booted(): void
+    {
+        // When a new addition is created, update the part stock quantity
+        static::created(function (PartAddition $addition) {
+            $partStock = $addition->partStock;
+            if ($partStock) {
+                $partStock->increment('quantity', $addition->quantity);
+            }
+        });
+
+        // If an addition is deleted, reverse the quantity
+        static::deleted(function (PartAddition $addition) {
+            $partStock = $addition->partStock;
+            if ($partStock) {
+                $partStock->decrement('quantity', $addition->quantity);
+            }
+        });
+    }
 }

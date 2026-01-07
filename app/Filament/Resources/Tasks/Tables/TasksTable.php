@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\Tasks\Tables;
 
+use App\Filament\Exports\TaskExporter;
 use App\Models\Task;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ExportAction;
+use Filament\Actions\ExportBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -134,7 +137,12 @@ class TasksTable
                 EditAction::make(),
             ])
             ->toolbarActions([
+                ExportAction::make()
+                    ->exporter(TaskExporter::class)
+                    ->label('Export'),
                 BulkActionGroup::make([
+                    ExportBulkAction::make()
+                        ->exporter(TaskExporter::class),
                     DeleteBulkAction::make(),
                 ]),
             ]);

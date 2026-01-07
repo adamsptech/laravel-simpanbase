@@ -25,9 +25,11 @@ class TypeCheckResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    protected static ?string $navigationLabel = 'Checklist Types';
+    protected static ?string $navigationLabel = 'Checklist';
 
     protected static ?string $modelLabel = 'Checklist Type';
+    
+    protected static ?string $pluralModelLabel = 'Checklists';
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -44,7 +46,7 @@ class TypeCheckResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            // Using inline Repeater in form instead
         ];
     }
 

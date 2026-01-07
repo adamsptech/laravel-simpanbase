@@ -28,6 +28,9 @@ class ChecklistResource extends Resource
 
     protected static ?string $modelLabel = 'Checklist Item';
 
+    // Hide from navigation - access via Checklist (TypeCheck) edit page
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema

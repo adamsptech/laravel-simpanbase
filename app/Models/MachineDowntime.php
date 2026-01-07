@@ -64,13 +64,13 @@ class MachineDowntime extends Model
      * Get availability summary for a specific month
      * Returns: Equipment, Frequency, Total Downtime, Availability %
      */
-    public static function getAvailabilitySummary($year, $month): array
+    public static function getAvailabilitySummary($year, $month, ?int $locationId = null, ?string $search = null, ?string $sort = 'equipment', ?string $direction = 'asc'): array
     {
         // Calculate working minutes for the month (24 hours per day, all days)
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
         $workingMinutes = $daysInMonth * 24 * 60;
 
-        return DB::select("
+        $query = "
             SELECT 
                 e.id as equipment_id,
                 e.name as equipment_name,
@@ -88,35 +88,89 @@ class MachineDowntime extends Model
                     ELSE 100
                 END as availability_percentage
             FROM equipment e
+            LEFT JOIN sublocations s ON e.sublocation_id = s.id
             LEFT JOIN machine_downtimes d ON e.id = d.equipment_id 
                 AND d.year = ? 
                 AND d.month = ?
-            GROUP BY e.id, e.name, e.serial_number
-            ORDER BY e.name
-        ", [$workingMinutes, $workingMinutes, $workingMinutes, $workingMinutes, $year, $month]);
+            WHERE 1=1
+        ";
+        
+        $params = [$workingMinutes, $workingMinutes, $workingMinutes, $workingMinutes, $year, $month];
+        
+        if ($locationId) {
+            $query .= " AND s.location_id = ?";
+            $params[] = $locationId;
+        }
+        
+        if ($search) {
+            $query .= " AND (e.name LIKE ? OR e.serial_number LIKE ?)";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
+        }
+        
+        $query .= " GROUP BY e.id, e.name, e.serial_number";
+        
+        // Apply sorting
+        $sortColumn = match($sort) {
+            'frequency' => 'frequency',
+            'downtime' => 'total_downtime_minutes',
+            'availability' => 'availability_percentage',
+            default => 'e.name',
+        };
+        
+        $query .= " ORDER BY {$sortColumn} " . ($direction === 'desc' ? 'DESC' : 'ASC');
+
+        return DB::select($query, $params);
     }
 
     /**
      * Get statistics for summary cards
      */
-    public static function getStatistics($year, $month): array
+    public static function getStatistics($year, $month, ?int $locationId = null, ?string $search = null): array
     {
-        $totalFrequency = self::where('year', $year)->where('month', $month)->count();
+        $query = self::where('year', $year)->where('month', $month);
+        
+        if ($locationId) {
+            $query->whereHas('equipment.sublocation', function ($q) use ($locationId) {
+                $q->where('location_id', $locationId);
+            });
+        }
+        
+        if ($search) {
+            $query->whereHas('equipment', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%");
+            });
+        }
+        
+        $totalFrequency = $query->count();
         
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
         $workingMinutes = $daysInMonth * 24 * 60;
         
-        $equipmentCount = Equipment::count();
-        $totalDowntime = self::where('year', $year)->where('month', $month)->sum('downtime_minutes');
+        // Get filtered equipment count
+        $equipmentQuery = Equipment::query();
+        if ($locationId) {
+            $equipmentQuery->whereHas('sublocation', function ($q) use ($locationId) {
+                $q->where('location_id', $locationId);
+            });
+        }
+        if ($search) {
+            $equipmentQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%");
+            });
+        }
+        $equipmentCount = $equipmentQuery->count();
+        
+        $totalDowntime = (clone $query)->sum('downtime_minutes');
         
         $totalPossibleMinutes = $workingMinutes * $equipmentCount;
         $averageAvailability = $totalPossibleMinutes > 0 
             ? round(100 - (($totalDowntime / $totalPossibleMinutes) * 100), 2)
             : 100;
 
-        $lastDowntime = self::where('year', $year)->where('month', $month)
-            ->orderBy('start_datetime', 'desc')
-            ->first();
+        $lastDowntime = (clone $query)->orderBy('start_datetime', 'desc')->first();
 
         return [
             'totalFrequency' => $totalFrequency,

@@ -2,26 +2,25 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Equipment;
 use App\Models\Location;
-use App\Models\MachineDowntime;
+use App\Models\OeeMonthly;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Livewire\Attributes\Url;
 
-class SlaReport extends Page
+class OeeReport extends Page
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartPie;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
 
     protected static \UnitEnum|string|null $navigationGroup = 'Management';
 
-    protected static ?int $navigationSort = 21;
+    protected static ?int $navigationSort = 23;
 
-    protected static ?string $navigationLabel = 'SLA Report';
+    protected static ?string $navigationLabel = 'OEE Report';
 
-    protected string $view = 'filament.pages.sla-report';
+    protected string $view = 'filament.pages.oee-report';
 
     // Livewire reactive properties with URL binding
     #[Url(as: 'year')]
@@ -29,9 +28,6 @@ class SlaReport extends Page
     
     #[Url(as: 'month')]
     public ?int $month = null;
-    
-    #[Url(as: 'equipment_id')]
-    public ?int $equipment_id = null;
     
     #[Url(as: 'location_id')]
     public ?int $location_id = null;
@@ -47,6 +43,7 @@ class SlaReport extends Page
 
     public function mount(): void
     {
+        // Set defaults if not in URL
         $this->year = $this->year ?? now()->year;
         $this->month = $this->month ?? now()->month;
     }
@@ -69,50 +66,24 @@ class SlaReport extends Page
         $this->search = '';
     }
 
-    // View equipment details
-    public function viewEquipment(int $id): void
-    {
-        $this->equipment_id = $id;
-    }
-
-    // Back to summary
-    public function backToSummary(): void
-    {
-        $this->equipment_id = null;
-    }
-
     public function getTitle(): string|Htmlable
     {
-        return 'SLA / Availability Report';
+        return 'OEE (Overall Equipment Effectiveness) Report';
     }
 
     public function getViewData(): array
     {
-        $summary = MachineDowntime::getAvailabilitySummary(
+        $summary = OeeMonthly::getMonthlySummary(
             $this->year, 
             $this->month, 
             $this->location_id, 
-            $this->search ?: null, 
             $this->sort, 
-            $this->direction
+            $this->direction,
+            $this->search ?: null
         );
-        $statistics = MachineDowntime::getStatistics($this->year, $this->month, $this->location_id, $this->search ?: null);
-
-        // Get equipment detail if selected
-        $equipmentDetails = null;
-        $selectedEquipment = null;
-        if ($this->equipment_id) {
-            $selectedEquipment = Equipment::find($this->equipment_id);
-            $equipmentDetails = MachineDowntime::where('equipment_id', $this->equipment_id)
-                ->where('year', $this->year)
-                ->where('month', $this->month)
-                ->orderBy('start_datetime', 'desc')
-                ->get();
-        }
 
         return [
             'summary' => $summary,
-            'statistics' => $statistics,
             'monthName' => date('F', mktime(0, 0, 0, $this->month, 1, $this->year)),
             'years' => range(now()->year - 3, now()->year + 2),
             'months' => [
@@ -121,15 +92,12 @@ class SlaReport extends Page
                 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December',
             ],
             'locations' => Location::orderBy('name')->pluck('name', 'id')->toArray(),
-            'selectedEquipment' => $selectedEquipment,
-            'equipmentDetails' => $equipmentDetails,
         ];
     }
 
     public static function canAccess(): bool
     {
         $role = auth()->user()?->role?->name ?? 'User';
-        return in_array($role, ['Admin', 'Manager', 'Planner', 'Supervisor', 'Customer']);
+        return in_array($role, ['Admin', 'Manager', 'Planner']);
     }
 }
-

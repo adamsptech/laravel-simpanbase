@@ -48,6 +48,7 @@ class TaskResource extends Resource
     {
         return [
             TaskDetailsRelationManager::class,
+            RelationManagers\CmDetailsRelationManager::class,
         ];
     }
 

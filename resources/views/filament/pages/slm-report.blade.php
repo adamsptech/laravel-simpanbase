@@ -1,16 +1,16 @@
 <x-filament-panels::page>
     <style>
-        .sla-grid {
+        .slm-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
         @media (max-width: 1280px) {
-            .sla-grid { grid-template-columns: repeat(2, 1fr); }
+            .slm-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
-            .sla-grid { grid-template-columns: 1fr; }
+            .slm-grid { grid-template-columns: 1fr; }
         }
         .stat-card {
             background: #ffffff;
@@ -18,6 +18,7 @@
             padding: 1.5rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border: 1px solid rgba(0,0,0,0.05);
+            text-align: center;
         }
         .dark .stat-card {
             background: #1f2937;
@@ -103,7 +104,7 @@
         }
         .dark .data-table td { border-color: #374151; }
         .sort-icon { margin-left: 0.25rem; font-size: 0.75rem; }
-        .availability-bar {
+        .slm-bar {
             width: 100px;
             height: 8px;
             background: #e5e7eb;
@@ -113,7 +114,7 @@
             vertical-align: middle;
             margin-right: 0.5rem;
         }
-        .availability-fill {
+        .slm-fill {
             height: 100%;
             border-radius: 4px;
         }
@@ -121,18 +122,18 @@
         .badge-amber { color: #f59e0b; }
         .badge-red { color: #ef4444; }
         .clickable-row { cursor: pointer; transition: background 0.2s; }
-        .clickable-row:hover { background: #f0f9ff !important; }
+        .clickable-row:hover { background: #f0fdf4 !important; }
         .dark .clickable-row:hover { background: #1e3a5f !important; }
         .detail-section {
-            background: #f0f9ff;
-            border: 2px solid #3b82f6;
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
             border-radius: 0.75rem;
             padding: 1rem;
             margin-top: 1.5rem;
         }
-        .dark .detail-section { background: #1e3a5f; border-color: #60a5fa; }
+        .dark .detail-section { background: #1e3a5f; border-color: #22c55e; }
         .back-link {
-            color: #3b82f6;
+            color: #22c55e;
             font-weight: 500;
             text-decoration: none;
             display: inline-flex;
@@ -209,30 +210,25 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="sla-grid" wire:loading.class="opacity-50">
+    <div class="slm-grid" wire:loading.class="opacity-50">
         <div class="stat-card">
-            <div class="stat-value" style="color: #ef4444;">{{ $statistics['totalFrequency'] }}</div>
-            <div class="stat-label">Total Incidents</div>
+            <div class="stat-value" style="color: #3b82f6;">{{ $totalTasks }}</div>
+            <div class="stat-label">Total PM Tasks</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value" style="color: #10b981;">{{ $statistics['averageAvailability'] }}%</div>
-            <div class="stat-label">Average Availability</div>
+            <div class="stat-value" style="color: #10b981;">{{ $completedTasks }}</div>
+            <div class="stat-label">Completed Tasks</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value" style="color: #f59e0b;">
-                @php
-                    $hours = floor($statistics['totalDowntimeMinutes'] / 60);
-                    $mins = $statistics['totalDowntimeMinutes'] % 60;
-                @endphp
-                {{ sprintf('%02d:%02d', $hours, $mins) }}
-            </div>
-            <div class="stat-label">Total Downtime (HH:MM)</div>
+            <div class="stat-value" style="color: #f59e0b;">{{ $totalTasks - $completedTasks }}</div>
+            <div class="stat-label">Pending/Open</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value" style="color: #3b82f6; font-size: 1rem;">
-                {{ $statistics['lastDowntime'] ? $statistics['lastDowntime']->format('d M Y H:i') : 'No incidents' }}
-            </div>
-            <div class="stat-label">Last Incident</div>
+            @php
+                $slmColor = $overallSlm >= 90 ? '#10b981' : ($overallSlm >= 70 ? '#f59e0b' : '#ef4444');
+            @endphp
+            <div class="stat-value" style="color: {{ $slmColor }};">{{ $overallSlm }}%</div>
+            <div class="stat-label">Overall SLM</div>
         </div>
     </div>
 
@@ -243,37 +239,50 @@
                 ← Back to Summary
             </span>
             <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; font-weight: 600;">
-                📋 Downtime Details: {{ $selectedEquipment->name }} 
+                📋 PM Details: {{ $selectedEquipment->name }} 
                 <span style="color: #6b7280; font-weight: normal;">({{ $selectedEquipment->serial_number ?? 'N/A' }})</span>
             </h3>
             
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Problem</th>
-                        <th>Root Cause</th>
+                        <th>Maint. Type</th>
+                        <th>Title</th>
                         <th style="text-align: center;">Start</th>
                         <th style="text-align: center;">End</th>
-                        <th style="text-align: center;">Downtime</th>
+                        <th style="text-align: center;">Duration</th>
+                        <th style="text-align: center;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($equipmentDetails as $detail)
+                    @forelse($equipmentDetails as $task)
                         @php
-                            $hours = floor($detail->downtime_minutes / 60);
-                            $mins = $detail->downtime_minutes % 60;
+                            $duration = $task->started_at && $task->ended_at 
+                                ? $task->started_at->diffInMinutes($task->ended_at) 
+                                : 0;
+                            $hours = floor($duration / 60);
+                            $mins = $duration % 60;
                         @endphp
                         <tr>
-                            <td style="font-weight: 500;">{{ $detail->problem }}</td>
-                            <td style="color: #6b7280;">{{ $detail->root_cause ?? '-' }}</td>
-                            <td style="text-align: center;">{{ $detail->start_datetime->format('d/m/Y H:i') }}</td>
-                            <td style="text-align: center;">{{ $detail->end_datetime->format('d/m/Y H:i') }}</td>
-                            <td style="text-align: center; font-weight: 600;">{{ sprintf('%02d:%02d', $hours, $mins) }}</td>
+                            <td>{{ $task->maintCategory?->name ?? 'N/A' }}</td>
+                            <td style="font-weight: 500;">{{ $task->notes ?? 'PM Task' }}</td>
+                            <td style="text-align: center;">{{ $task->started_at?->format('d/m/Y H:i') ?? '-' }}</td>
+                            <td style="text-align: center;">{{ $task->ended_at?->format('d/m/Y H:i') ?? '-' }}</td>
+                            <td style="text-align: center;">{{ $duration > 0 ? sprintf('%02d:%02d', $hours, $mins) : '-' }}</td>
+                            <td style="text-align: center;">
+                                @if($task->status === 4)
+                                    <span style="color: #10b981;">✅ Closed</span>
+                                @elseif($task->status >= 1)
+                                    <span style="color: #f59e0b;">⏳ In Progress</span>
+                                @else
+                                    <span style="color: #6b7280;">📋 Open</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 2rem; color: #9ca3af;">
-                                No downtime incidents recorded for this equipment in {{ $monthName }} {{ $year }}.
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                                No PM tasks for this equipment in {{ $monthName }} {{ $year }}.
                             </td>
                         </tr>
                     @endforelse
@@ -282,13 +291,13 @@
         </div>
     @endif
 
-    <!-- Equipment Availability Summary Table -->
+    <!-- Equipment SLM Summary Table -->
     <div style="background: #fff; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-top: 1rem; position: relative;" class="dark:bg-gray-800">
         <div wire:loading.flex class="loading-overlay">
             <span class="text-lg font-medium">Loading...</span>
         </div>
         <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; font-weight: 600;">
-            📊 Equipment Availability Summary <span style="font-weight: normal; color: #6b7280;">(Click a row to view details)</span>
+            📊 Equipment SLM Summary <span style="font-weight: normal; color: #6b7280;">(Click a row to view PM details)</span>
         </div>
         <table class="data-table">
             <thead>
@@ -306,15 +315,16 @@
                             <span class="sort-icon">{{ $direction === 'asc' ? '▲' : '▼' }}</span>
                         @endif
                     </th>
-                    <th style="text-align: center;" wire:click="sortBy('downtime')">
-                        Downtime
-                        @if($sort === 'downtime')
+                    <th style="text-align: center;" wire:click="sortBy('actual_time')">
+                        Actual Time
+                        @if($sort === 'actual_time')
                             <span class="sort-icon">{{ $direction === 'asc' ? '▲' : '▼' }}</span>
                         @endif
                     </th>
-                    <th style="text-align: center;" wire:click="sortBy('availability')">
-                        Availability %
-                        @if($sort === 'availability')
+                    <th style="text-align: center;">Requested Time</th>
+                    <th style="text-align: center;" wire:click="sortBy('slm')">
+                        SLM %
+                        @if($sort === 'slm')
                             <span class="sort-icon">{{ $direction === 'asc' ? '▲' : '▼' }}</span>
                         @endif
                     </th>
@@ -324,35 +334,38 @@
             <tbody>
                 @forelse($summary as $item)
                     @php
-                        $availability = $item->availability_percentage;
-                        $colorClass = $availability >= 95 ? 'badge-green' : ($availability >= 85 ? 'badge-amber' : 'badge-red');
-                        $barColor = $availability >= 95 ? '#10b981' : ($availability >= 85 ? '#f59e0b' : '#ef4444');
-                        $hours = floor($item->total_downtime_minutes / 60);
-                        $mins = $item->total_downtime_minutes % 60;
+                        $slm = $item->slm_percentage;
+                        $colorClass = $slm >= 90 ? 'badge-green' : ($slm >= 70 ? 'badge-amber' : 'badge-red');
+                        $barColor = $slm >= 90 ? '#10b981' : ($slm >= 70 ? '#f59e0b' : '#ef4444');
+                        $actualHours = floor($item->actual_minutes / 60);
+                        $actualMins = $item->actual_minutes % 60;
+                        $reqHours = floor($item->requested_minutes / 60);
+                        $reqMins = $item->requested_minutes % 60;
                         $isSelected = $equipment_id == $item->equipment_id;
                     @endphp
                     <tr class="clickable-row" 
                         wire:click="viewEquipment({{ $item->equipment_id }})"
-                        style="{{ $isSelected ? 'background: #dbeafe;' : '' }}">
+                        style="{{ $isSelected ? 'background: #dcfce7;' : '' }}">
                         <td style="font-weight: 500;">
                             {{ $item->equipment_name }}
                             @if($isSelected)
-                                <span style="color: #3b82f6;">✓</span>
+                                <span style="color: #22c55e;">✓</span>
                             @endif
                         </td>
                         <td style="color: #6b7280;">{{ $item->serial_number ?? 'N/A' }}</td>
                         <td style="text-align: center;">{{ $item->frequency }}</td>
-                        <td style="text-align: center;">{{ sprintf('%02d:%02d', $hours, $mins) }}</td>
+                        <td style="text-align: center;">{{ sprintf('%02d:%02d', $actualHours, $actualMins) }}</td>
+                        <td style="text-align: center;">{{ sprintf('%02d:%02d', $reqHours, $reqMins) }}</td>
                         <td style="text-align: center;">
-                            <div class="availability-bar">
-                                <div class="availability-fill" style="width: {{ $availability }}%; background: {{ $barColor }};"></div>
+                            <div class="slm-bar">
+                                <div class="slm-fill" style="width: {{ min($slm, 100) }}%; background: {{ $barColor }};"></div>
                             </div>
-                            <span class="{{ $colorClass }}" style="font-weight: 600;">{{ $availability }}%</span>
+                            <span class="{{ $colorClass }}" style="font-weight: 600;">{{ $slm }}%</span>
                         </td>
                         <td>
-                            @if($availability >= 95)
-                                <span style="color: #10b981;">✅ Excellent</span>
-                            @elseif($availability >= 85)
+                            @if($slm >= 90)
+                                <span style="color: #10b981;">✅ Good</span>
+                            @elseif($slm >= 70)
                                 <span style="color: #f59e0b;">⚠️ Warning</span>
                             @else
                                 <span style="color: #ef4444;">🔴 Critical</span>
@@ -361,8 +374,8 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 2rem; color: #9ca3af;">
-                            No equipment data available. Add equipment first.
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                            No equipment data available.
                         </td>
                     </tr>
                 @endforelse

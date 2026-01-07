@@ -136,6 +136,11 @@ class Task extends Model
         return $this->hasOne(CmDetail::class);
     }
 
+    public function cmDetails(): HasMany
+    {
+        return $this->hasMany(CmDetail::class);
+    }
+
     public function partUsages(): HasMany
     {
         return $this->hasMany(PartUsage::class);
