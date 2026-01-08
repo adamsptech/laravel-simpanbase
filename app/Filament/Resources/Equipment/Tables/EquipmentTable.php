@@ -27,6 +27,17 @@ class EquipmentTable
                     ->searchable(),
                 TextColumn::make('category')
                     ->searchable(),
+                TextColumn::make('warranty_expiry_date')
+                    ->label('Warranty Expiry')
+                    ->date('d/m/Y')
+                    ->sortable()
+                    ->badge()
+                    ->color(fn ($record) => match (true) {
+                        $record->warranty_expiry_date === null => 'gray',
+                        $record->warranty_expiry_date->isPast() => 'danger',
+                        $record->warranty_expiry_date->diffInDays(now()) <= 60 => 'warning',
+                        default => 'success',
+                    }),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

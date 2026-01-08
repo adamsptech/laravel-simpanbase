@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Equipment extends Model
 {
-    protected $table = 'equipment';
+    use Auditable;
 
+    protected $table = 'equipment';
+    
     protected $fillable = [
         'sublocation_id',
         'supplier_id',
@@ -17,6 +20,11 @@ class Equipment extends Model
         'serial_number',
         'category',
         'notes',
+        'warranty_expiry_date',
+    ];
+
+    protected $casts = [
+        'warranty_expiry_date' => 'date',
     ];
 
     public function sublocation(): BelongsTo

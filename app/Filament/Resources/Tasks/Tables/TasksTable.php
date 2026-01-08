@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Tasks\Tables;
 
 use App\Filament\Exports\TaskExporter;
 use App\Models\Task;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -135,6 +136,11 @@ class TasksTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('print')
+                    ->label('Print')
+                    ->icon('heroicon-o-printer')
+                    ->url(fn (Task $record) => route('work-order.print', $record))
+                    ->openUrlInNewTab(),
             ])
             ->toolbarActions([
                 ExportAction::make()

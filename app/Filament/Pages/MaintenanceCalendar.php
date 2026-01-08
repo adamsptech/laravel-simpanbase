@@ -59,4 +59,3 @@ class MaintenanceCalendar extends Page
         ];
     }
 }
-
