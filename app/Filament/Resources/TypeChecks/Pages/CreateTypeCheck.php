@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\TypeChecks\Pages;
 
 use App\Filament\Resources\TypeChecks\TypeCheckResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateTypeCheck extends CreateRecord
 {

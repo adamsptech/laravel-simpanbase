@@ -132,4 +132,11 @@ class AuditLogResource extends Resource
     {
         return false;
     }
+
+    // Only Admin can view Audit Logs
+    public static function canAccess(): bool
+    {
+        $role = auth()->user()?->role?->name ?? 'User';
+        return in_array($role, ['Admin']);
+    }
 }

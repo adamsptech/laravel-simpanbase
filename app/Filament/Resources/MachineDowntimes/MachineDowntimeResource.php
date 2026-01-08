@@ -66,7 +66,7 @@ class MachineDowntimeResource extends Resource
     public static function canAccess(): bool
     {
         $role = auth()->user()?->role?->name ?? 'User';
-        return in_array($role, ['Admin', 'Manager', 'Planner', 'Supervisor']);
+        return in_array($role, ['Admin', 'Manager', 'Planner', 'Supervisor', 'Customer', 'Engineer']);
     }
 }
 

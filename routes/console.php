@@ -33,7 +33,7 @@ Schedule::command('app:check-warranty-expiration')->dailyAt('09:00');
 // Send low stock alerts every Monday at 8:00 AM
 Schedule::command('app:send-low-stock-alert')->weeklyOn(1, '08:00');
 
-// Optional: Generate monthly OEE data on the 1st of each month at 1:00 AM
-// Schedule::command('app:generate-monthly-oee')->monthlyOn(1, '01:00');
+// Generate monthly OEE data on the 1st of each month at 1:00 AM
+Schedule::command('app:generate-monthly-oee')->monthlyOn(1, '01:00');
 
 

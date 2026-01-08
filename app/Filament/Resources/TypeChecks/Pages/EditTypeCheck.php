@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\TypeChecks\Pages;
 
 use App\Filament\Resources\TypeChecks\TypeCheckResource;
+use App\Filament\Resources\Pages\EditRecord;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
 
 class EditTypeCheck extends EditRecord
 {

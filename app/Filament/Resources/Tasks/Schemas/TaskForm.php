@@ -56,6 +56,7 @@ class TaskForm
 
                         DatePicker::make('due_date')
                             ->label('Due Date')
+                            ->default(now())
                             ->native(false),
                     ]),
 

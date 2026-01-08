@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\MaintCategories\Pages;
 
 use App\Filament\Resources\MaintCategories\MaintCategoryResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateMaintCategory extends CreateRecord
 {

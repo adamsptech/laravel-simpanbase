@@ -149,7 +149,9 @@ class TasksTable
                 BulkActionGroup::make([
                     ExportBulkAction::make()
                         ->exporter(TaskExporter::class),
-                    DeleteBulkAction::make(),
+                    // Only Admin can delete
+                    DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()?->role?->name === 'Admin', 'Planner'),
                 ]),
             ]);
     }

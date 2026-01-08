@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\MachineDowntimes\Pages;
 
 use App\Filament\Resources\MachineDowntimes\MachineDowntimeResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateMachineDowntime extends CreateRecord
 {

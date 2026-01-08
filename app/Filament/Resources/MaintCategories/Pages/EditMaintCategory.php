@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\MaintCategories\Pages;
 
 use App\Filament\Resources\MaintCategories\MaintCategoryResource;
+use App\Filament\Resources\Pages\EditRecord;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
 
 class EditMaintCategory extends EditRecord
 {

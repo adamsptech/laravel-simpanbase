@@ -291,7 +291,9 @@
                         </td>
                         <td>{{ number_format($record->actual_production_percentage ?? 0, 1) }}%</td>
                         <td>
-                            <a href="/panels/oee-monthlies/{{ $record->id }}/edit" onclick="event.stopPropagation();" style="color: #3b82f6; text-decoration: none;">✏️</a>
+                            @if(in_array(auth()->user()?->role?->name, ['Admin', 'Manager', 'Planner']))
+                                <a href="/panels/oee-monthlies/{{ $record->id }}/edit" onclick="event.stopPropagation();" style="color: #3b82f6; text-decoration: none;">✏️</a>
+                            @endif
                         </td>
                     </tr>
                     <tr id="detail-{{ $record->id }}" style="display: none;">

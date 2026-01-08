@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\PeriodPms\Pages;
 
 use App\Filament\Resources\PeriodPms\PeriodPmResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreatePeriodPm extends CreateRecord
 {

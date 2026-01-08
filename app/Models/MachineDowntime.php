@@ -8,16 +8,25 @@ use Illuminate\Support\Facades\DB;
 
 class MachineDowntime extends Model
 {
+    // Status constants
+    const STATUS_OPEN = 'open';
+    const STATUS_IN_PROGRESS = 'in_progress';
+    const STATUS_CLOSED = 'closed';
+
     protected $fillable = [
         'equipment_id',
         'problem',
         'root_cause',
+        'action_taken',
         'start_datetime',
         'end_datetime',
         'downtime_minutes',
         'year',
         'month',
         'reported_by',
+        'status',
+        'submitted_by',
+        'picked_up_by',
     ];
 
     protected $casts = [
@@ -33,6 +42,45 @@ class MachineDowntime extends Model
     public function reporter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reported_by');
+    }
+
+    public function submitter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitted_by');
+    }
+
+    public function engineer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'picked_up_by');
+    }
+
+    /**
+     * Get status label
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return match($this->status) {
+            self::STATUS_OPEN => 'Open',
+            self::STATUS_IN_PROGRESS => 'In Progress',
+            self::STATUS_CLOSED => 'Closed',
+            default => 'Unknown',
+        };
+    }
+
+    /**
+     * Check if customer can edit this record
+     */
+    public function canCustomerEdit(): bool
+    {
+        return $this->status === self::STATUS_OPEN;
+    }
+
+    /**
+     * Check if engineer can edit this record
+     */
+    public function canEngineerEdit(): bool
+    {
+        return in_array($this->status, [self::STATUS_OPEN, self::STATUS_IN_PROGRESS]);
     }
 
     /**

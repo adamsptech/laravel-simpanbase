@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\Sublocations\Pages;
 
 use App\Filament\Resources\Sublocations\SublocationResource;
+use App\Filament\Resources\Pages\EditRecord;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
 
 class EditSublocation extends EditRecord
 {

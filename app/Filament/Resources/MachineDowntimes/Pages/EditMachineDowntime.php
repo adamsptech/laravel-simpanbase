@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\MachineDowntimes\Pages;
 
 use App\Filament\Resources\MachineDowntimes\MachineDowntimeResource;
+use App\Filament\Resources\Pages\EditRecord;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
 
 class EditMachineDowntime extends EditRecord
 {

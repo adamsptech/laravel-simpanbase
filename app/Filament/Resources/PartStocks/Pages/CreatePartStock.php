@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\PartStocks\Pages;
 
 use App\Filament\Resources\PartStocks\PartStockResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreatePartStock extends CreateRecord
 {

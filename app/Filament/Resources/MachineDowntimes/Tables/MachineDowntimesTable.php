@@ -29,6 +29,21 @@ class MachineDowntimesTable
                     ->label('Problem')
                     ->limit(40)
                     ->searchable(),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'open' => 'danger',
+                        'in_progress' => 'warning',
+                        'closed' => 'success',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'open' => 'Open',
+                        'in_progress' => 'In Progress',
+                        'closed' => 'Closed',
+                        default => $state,
+                    }),
                 TextColumn::make('start_datetime')
                     ->label('Start')
                     ->dateTime('d/m/Y H:i')
@@ -41,6 +56,9 @@ class MachineDowntimesTable
                     ->label('Duration')
                     ->formatStateUsing(fn ($state) => MachineDowntime::formatDowntime($state))
                     ->sortable(),
+                TextColumn::make('engineer.name')
+                    ->label('Picked Up By')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('year')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

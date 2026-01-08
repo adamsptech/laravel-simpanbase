@@ -98,6 +98,6 @@ class OeeReport extends Page
     public static function canAccess(): bool
     {
         $role = auth()->user()?->role?->name ?? 'User';
-        return in_array($role, ['Admin', 'Manager', 'Planner']);
+        return in_array($role, ['Admin', 'Manager', 'Planner', 'Customer']);
     }
 }
