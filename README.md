@@ -334,16 +334,4 @@ This project is open-sourced software licensed under the [MIT license](https://o
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
----
-
-## 📞 Support
-
-For support, open an issue in the repository.
-
----
-
 <p align="center">Made with ❤️ using Laravel & Filament</p>
